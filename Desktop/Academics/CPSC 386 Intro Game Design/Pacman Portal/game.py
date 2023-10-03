@@ -7,6 +7,34 @@ from ghost import Ghost
 from settings import Settings
 from mazes import maze_list
 
+def draw_maze():
+    # Draw the maze, points, power pills, and Pac-Man
+    for y, row in enumerate(maze):
+        for x, char in enumerate(row):
+            if char == "#":
+                pygame.draw.rect(screen, Settings.blue, (x * cell_size, y * cell_size, cell_size, cell_size))
+            elif char == ".":
+                pygame.draw.circle(screen, Settings.yellow, (x * cell_size + cell_size // 2, y * cell_size + cell_size // 2), 2)
+            elif char == "o":  # Represent power pills with asterisks
+                pygame.draw.circle(screen, Settings.yellow, (x * cell_size + cell_size // 2, y * cell_size + cell_size // 2), 5)
+            elif char == "_":    # Draw the gate for ghosts
+                pygame.draw.rect(screen, Settings.blue, (x * cell_size, y * cell_size, cell_size, cell_size/2))
+def display_score():
+     # Display the score, powered up status, and ghosts eaten
+    font = pygame.font.Font(None, 24)
+    score_text = font.render(f"Score: {score}", True, Settings.white)
+    status_text = font.render("Powered up" if powered_up else "Default", True, Settings.white)
+    ghosts_text = font.render(f"Ghosts eaten: {ghosts_eaten}", True, Settings.white)
+    
+    score_rect = score_text.get_rect(topleft=(SCREEN_WIDTH - 120, 10))
+    status_rect = status_text.get_rect(topleft=(SCREEN_WIDTH - 120, 40))  # Adjust the vertical position
+    ghosts_rect = ghosts_text.get_rect(topleft=(SCREEN_WIDTH - 120, 70))  # Adjust the vertical position
+    
+    screen.blit(score_text, score_rect)
+    screen.blit(status_text, status_rect)
+    screen.blit(ghosts_text, ghosts_rect)
+
+
 # Define the Pac-Man maze as a 2D grid
 maze = maze_list[1] # Gets a certain maze design from mazes.py
 
@@ -17,11 +45,8 @@ pygame.init()
 maze_width = len(maze[0])
 maze_height = len(maze)
 cell_size = Settings.cell_size
-# Colors
-yellow = Settings.yellow; black = Settings.black; blue = Settings.blue
 # Screen size
-SCREEN_WIDTH = maze_width * cell_size
-SCREEN_HEIGHT = maze_height * cell_size
+SCREEN_WIDTH = maze_width * cell_size; SCREEN_HEIGHT = maze_height * cell_size
 # Speeds
 pacman_speed = 1
 frame_rate = 30
@@ -31,12 +56,11 @@ ghost_speed = 1
 clock = pygame.time.Clock()
 
 # Track points
-points_collected = 0
-power_pills_collected = 0
+points_collected = 0; power_pills_collected = 0; ghosts_eaten = 0
 
 # Create the game window
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Pac-Man Maze")
+pygame.display.set_caption("Pac-Man Portal")
 
 # Find a valid initial position for Pac-Man that is not a wall
 pacman_initial_x = 0; pacman_initial_y = 0
@@ -83,18 +107,24 @@ for y, row in enumerate(maze):
 running = True
 moving = False  # Flag to track Pac-Man's movement
 pacman_move_counter = 0
+score = 0
+powered_up = False
+
 ghost_move_counter = 0
+
 game_over = False
 try_again_clicked = False
-# Define Try Again button rect
+
 try_again_button_rect = pygame.Rect(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 20, 200, 50)
 
 # Game loop ****************************************************
 while running:
     try_again_clicked = False
+    # Check for events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        # Check for keydown and keyup events
         elif event.type == pygame.KEYDOWN:
             # Handle Pac-Man's direction based on arrow key inputs
             if event.key == pygame.K_RIGHT:
@@ -159,12 +189,15 @@ while running:
                 # Check if Pac-Man has eaten a point
                 if maze[next_cell_y][next_cell_x] == ".":
                     points_collected += 1
+                    score += 10
                     # Remove the point from the maze
                     maze[next_cell_y] = maze[next_cell_y][:next_cell_x] + " " + maze[next_cell_y][next_cell_x + 1:]
 
                 # Check if Pac-Man has eaten a power pill
                 elif maze[next_cell_y][next_cell_x] == "o":
                     power_pills_collected += 1
+                    powered_up = True
+                    score += 50
                     # Remove the power pill from the maze
                     maze[next_cell_y] = maze[next_cell_y][:next_cell_x] + " " + maze[next_cell_y][next_cell_x + 1:]
 
@@ -172,8 +205,20 @@ while running:
                 if pygame.Rect(pacman.x - pacman.radius, pacman.y - pacman.radius, 2 * pacman.radius, 2 * pacman.radius).colliderect(
                     pygame.Rect(ghost.x - ghost.radius, ghost.y - ghost.radius, 2 * ghost.radius, 2 * ghost.radius)
                 ):
-                    game_over = True  # Set game over flag to True
+                    if powered_up:
+                        # Eat the ghost
+                        ghosts_eaten += 1
+                        # Find the ghost's position in the maze and remove it
+                        ghost_cell_x = int(ghost.x // cell_size)
+                        ghost_cell_y = int(ghost.y // cell_size)
+                        if 0 <= ghost_cell_x < len(maze[0]) and 0 <= ghost_cell_y < len(maze):
+                            maze[ghost_cell_y] = maze[ghost_cell_y][:ghost_cell_x] + " " + maze[ghost_cell_y][ghost_cell_x + 1:]
+                        # Add score
+                        score += ghosts_eaten * 400
+                    elif not powered_up:
+                        game_over = True  # Set game over flag to True
 
+        # *** Need to fix the ghost not moving on its own***
         # Move Ghost gradually based on the move_counter
         if ghost_move_counter < ghost_speed:
             ghost_move_counter += 1
@@ -200,18 +245,10 @@ while running:
                 ghost.y = next_y
 
     # Clear the screen
-    screen.fill(black)
-    # Draw the maze, points, power pills, and Pac-Man
-    for y, row in enumerate(maze):
-        for x, char in enumerate(row):
-            if char == "#":
-                pygame.draw.rect(screen, blue, (x * cell_size, y * cell_size, cell_size, cell_size))
-            elif char == ".":
-                pygame.draw.circle(screen, yellow, (x * cell_size + cell_size // 2, y * cell_size + cell_size // 2), 2)
-            elif char == "o":  # Represent power pills with asterisks
-                pygame.draw.circle(screen, yellow, (x * cell_size + cell_size // 2, y * cell_size + cell_size // 2), 5)
-            elif char == "_":    # Draw the gate for ghosts
-                pygame.draw.rect(screen, blue, (x * cell_size, y * cell_size, cell_size, cell_size/2))
+    screen.fill(Settings.black)
+    
+    draw_maze()
+    
     # Draw Pac-Man and ghost
     pacman.draw(screen)
     ghost.draw(screen)
@@ -226,6 +263,8 @@ while running:
         screen.blit(game_over_text, game_over_rect)
         screen.blit(try_again_text, try_again_rect)
     
+    display_score()
+
     # Update the display
     pygame.display.flip()
     # Control the frame rate
