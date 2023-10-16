@@ -1,13 +1,25 @@
 import pygame
 from pygame.sprite import Sprite, Group
-from pacman import Pacman
-from mazes import maze
+from timer import Timer
 from random import randint
+from enum import Enum
+
 # from timer import Timer
 # For some reason line 6 doesn't import properly
 
 # Claire Swiatek : Portal Laser Class
 # Attempting to refactor/repurpose the laser code from Alien Invasion. 
+
+class ShotType(Enum):
+    BLUELEFT = 1
+    BLUERIGHT = 2
+    BLUEUP = 3
+    BLUEDOWN = 4
+    ORANGELEFT = 5
+    ORANGERIGHT = 6
+    ORANGEUP = 7
+    ORANGEDOWN = 8
+
 
 class Shots():
     def __init__(self, settings, type):
@@ -34,51 +46,46 @@ class Shots():
 
 class Shot(Sprite):
     """Meant to manage the portal shots for PacMan"""
-    blue_shot_l_images = [pygame.transform.rotozoom(pygame.image.load(f'Sprites/Portal_Effects/Shots/Blue/Left/Blue_Shot_L{n}.png'), 0, 1) for n in range(4)]
-    blue_shot_r_images = [pygame.transform.rotozoom(pygame.image.load(f'Sprites/Portal_Effects/Shots/Blue/Left/Blue_Shot_R{n}.png'), 0, 1) for n in range(4)]
-    blue_shot_up_images = [pygame.transform.rotozoom(pygame.image.load(f'Sprites/Portal_Effects/Shots/Blue/Left/Blue_Shot_Up{n}.png'), 0, 1) for n in range(4)]
-    blue_shot_down_images = [pygame.transform.rotozoom(pygame.image.load(f'Sprites/Portal_Effects/Shots/Blue/Left/Blue_Shot_Down{n}.png'), 0, 1) for n in range(4)]
+    blue_shot_l_images = [pygame.transform.rotozoom(pygame.image.load(f'assets/Portal_Effects/Shots/Blue/Left/Blue_Shot_L{n}.png'), 0, 1) for n in range(4)]
+    blue_shot_r_images = [pygame.transform.rotozoom(pygame.image.load(f'assets/Portal_Effects/Shots/Blue/Right/Blue_Shot_R{n}.png'), 0, 1) for n in range(4)]
+    blue_shot_up_images = [pygame.transform.rotozoom(pygame.image.load(f'assets/Portal_Effects/Shots/Blue/Up/Blue_Shot_Up{n}.png'), 0, 1) for n in range(4)]
+    blue_shot_down_images = [pygame.transform.rotozoom(pygame.image.load(f'assets/Portal_Effects/Shots/Blue/Down/Blue_Shot_Down{n}.png'), 0, 1) for n in range(4)]
 
-    orange_shot_l_images = [pygame.transform.rotozoom(pygame.image.load(f'Sprites/Portal_Effects/Shots/Orange/Left/Orange_Shot_L{n}.png'), 0, 1) for n in range(4)]
-    orange_shot_r_images = [pygame.transform.rotozoom(pygame.image.load(f'Sprites/Portal_Effects/Shots/Orange/Left/Orange_Shot_R{n}.png'), 0, 1) for n in range(4)]
-    orange_shot_up_images = [pygame.transform.rotozoom(pygame.image.load(f'Sprites/Portal_Effects/Shots/Orange/Left/Orange_Shot_Up{n}.png'), 0, 1) for n in range(4)]
-    orange_shot_down_images = [pygame.transform.rotozoom(pygame.image.load(f'Sprites/Portal_Effects/Shots/Orange/Left/Orange_Shot_Down{n}.png'), 0, 1) for n in range(4)]
+    orange_shot_l_images = [pygame.transform.rotozoom(pygame.image.load(f'assets/Portal_Effects/Shots/Orange/Left/Orange_Shot_L{n}.png'), 0, 1) for n in range(4)]
+    orange_shot_r_images = [pygame.transform.rotozoom(pygame.image.load(f'assets/Portal_Effects/Shots/Orange/Right/OrangeShot_R{n}.png'), 0, 1) for n in range(4)]
+    orange_shot_up_images = [pygame.transform.rotozoom(pygame.image.load(f'assets/Portal_Effects/Shots/Orange/Up/OrangeShot_Up{n}.png'), 0, 1) for n in range(4)]
+    orange_shot_down_images = [pygame.transform.rotozoom(pygame.image.load(f'assets/Portal_Effects/Shots/Orange/Down/OrangeShot_Down{n}.png'), 0, 1) for n in range(4)]
+    shot_images = {ShotType.BLUELEFT: blue_shot_l_images, ShotType.BLUERIGHT: blue_shot_r_images, ShotType.BLUEUP: blue_shot_up_images, ShotType.BLUEDOWN: blue_shot_down_images,
+                    ShotType.ORANGELEFT: orange_shot_l_images, ShotType.ORANGERIGHT: orange_shot_r_images,ShotType.ORANGEUP: orange_shot_up_images, ShotType.ORANGEDOWN: orange_shot_down_images,}
 
-    def __init__(self, settings, screen, x, y):
+
+    def __init__(self, screen, x, y, type):
         super().__init__()
         self.screen = screen
-        self.rect = pygame.Rect(0, 0, settings.laser_width, settings.laser_height)
+        self.rect = pygame.Rect(0, 0, 5, 30)
         self.rect.centerx = x
         self.rect.bottom = y
         self.y = float(self.rect.y)
         self.x = float(self.rect.x)
         self.type = type
-        self.color = (randint(0, 200), randint(0, 200), randint(0, 200))
-        self.speed = settings.laser_speed
+        self.speed = 1
+        imagelist = Shots.shots_images[type]
+        self.timer = Timer(image_list=imagelist, delay=200)
+       
 
-        imageListBl = Shot.blue_shot_l_images[type]
-        imageListBr = Shot.blue_shot_r_images[type]
-        imageListBUp = Shot.blue_shot_up_images[type]
-        imageListBDown = Shot.blue_shot_down_images[type]
 
-        imageListOl = Shot.orange_shot_l_images[type]
-        imageListOr = Shot.orange_shot_r_images[type]
-        imageListOUp = Shot.orange_shot_up_images[type]
-        imageListODown = Shot.orange_shot_down_images[type]
-        # self.timer = Timer(image_list=imagelist, delay=200)
-        # trying to figure out how to hook this to PacMan
-    
     def update(self):
-        self.y += self.speed if self.type == type else -self.speed
+        if self.type == ShotType.BLUEDOWN or ShotType.BLUEUP or ShotType.ORANGEDOWN or ShotType.ORANGEUP:
+            self.y += self.speed if self.type == ShotType.BLUEDOWN or ShotType.ORANGEDOWN else -self.speed
+        else:
+            self.x += self.speed if self.type == ShotType.BLUELEFT or ShotType.ORANGELEFT else -self.speed
         self.rect.y = self.y
-        self.rect.x = self.x
         self.draw()
-    # WIP/TODO
-
+        
     def draw(self):
         image = self.timer.image()
-        # rect for PacMan?
         rect = image.get_rect()
+        rect.left, rect.top = self.rect.left, self.rect.top
         self.screen.blit(image, rect)
-    #WIP/TODO
+        # pg.draw.rect(self.screen, self.color, self.rect)
     
