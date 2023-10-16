@@ -1,8 +1,7 @@
 import pygame
 from pygame.sprite import Sprite, Group
 from pacman import Pacman
-from settings import Settings
-from mazes import maze_list
+from mazes import maze
 from random import randint
 # from timer import Timer
 # For some reason line 6 doesn't import properly
@@ -52,6 +51,7 @@ class Shot(Sprite):
         self.rect.centerx = x
         self.rect.bottom = y
         self.y = float(self.rect.y)
+        self.x = float(self.rect.x)
         self.type = type
         self.color = (randint(0, 200), randint(0, 200), randint(0, 200))
         self.speed = settings.laser_speed
@@ -66,12 +66,19 @@ class Shot(Sprite):
         imageListOUp = Shot.orange_shot_up_images[type]
         imageListODown = Shot.orange_shot_down_images[type]
         # self.timer = Timer(image_list=imagelist, delay=200)
+        # trying to figure out how to hook this to PacMan
     
     def update(self):
-        pass
+        self.y += self.speed if self.type == type else -self.speed
+        self.rect.y = self.y
+        self.rect.x = self.x
+        self.draw()
     # WIP/TODO
 
     def draw(self):
-        pass
+        image = self.timer.image()
+        # rect for PacMan?
+        rect = image.get_rect()
+        self.screen.blit(image, rect)
     #WIP/TODO
     
