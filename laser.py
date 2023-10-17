@@ -4,12 +4,6 @@ from timer import Timer
 from random import randint
 from enum import Enum
 
-# from timer import Timer
-# For some reason line 6 doesn't import properly
-
-# Claire Swiatek : Portal Laser Class
-# Attempting to refactor/repurpose the laser code from Alien Invasion. 
-
 class ShotType(Enum):
     BLUELEFT = 1
     BLUERIGHT = 2
@@ -22,16 +16,15 @@ class ShotType(Enum):
 
 
 class Shots():
-    def __init__(self, settings, type):
+    def __init__(self, type):
         self.shots = Group()
-        self.settings = settings
         self.type = type
 
     def reset(self):
         self.shots.empty()
     
-    def shoot(self, game, x, y):
-        self.shots.add(Shot(settings=game.settings, screen = game.screen, x=x, y=y))
+    def shoot(self, screen, x, y, type):
+        self.shots.add(Shot(screen = screen, x=x, y=y, type=type))
     
     def update(self):
         self.shots.update()
@@ -62,14 +55,14 @@ class Shot(Sprite):
     def __init__(self, screen, x, y, type):
         super().__init__()
         self.screen = screen
-        self.rect = pygame.Rect(0, 0, 5, 30)
+        self.rect = pygame.Rect(0, 0, 10, 30)
         self.rect.centerx = x
         self.rect.bottom = y
         self.y = float(self.rect.y)
         self.x = float(self.rect.x)
         self.type = type
         self.speed = 1
-        imagelist = Shots.shots_images[type]
+        imagelist = self.shot_images[type]
         self.timer = Timer(image_list=imagelist, delay=200)
        
 
