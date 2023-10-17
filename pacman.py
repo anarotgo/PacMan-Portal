@@ -1,6 +1,8 @@
-# Build Pac-Man from Scratch in Python with PyGame!!
+#Submission for Pac-Man with Portals by Ali Yassine, Anar Otgonbaatar, Claire Swiatek
 import copy
 from mazes import maze
+from laser import Shots, ShotType
+from portals import Portal
 import pygame
 import math
 
@@ -45,6 +47,9 @@ clyde_y = 438
 clyde_direction = 2
 counter = 0
 flicker = False
+
+blue_shots = Shots(ShotType.BLUERIGHT)
+orange_shots = Shots(ShotType.ORANGERIGHT)
 
 # R, L, U, D
 turns_allowed = [False, False, False, False]
@@ -1148,6 +1153,16 @@ while run:
                 direction_command = 2
             if event.key == pygame.K_DOWN:
                 direction_command = 3
+            if event.key == pygame.K_b:  # Check if the "Q" key is pressed
+                x = player_x  # Replace with the actual player's x position
+                y = player_y  # Replace with the actual player's y position
+                blue_shots.shoot(screen, x, y, ShotType.BLUERIGHT)  # Create a blue shot
+            if event.key == pygame.K_o:  # Check if the "Q" key is pressed
+                x = player_x  # Replace with the actual player's x position
+                y = player_y  # Replace with the actual player's y position
+                orange_shots.shoot(screen, x, y, ShotType.ORANGERIGHT)  # Create a blue shot
+
+
             if event.key == pygame.K_SPACE and (game_over or game_won):
                 powerup = False
                 power_counter = 0
@@ -1189,6 +1204,7 @@ while run:
                 direction_command = direction
             if event.key == pygame.K_DOWN and direction_command == 3:
                 direction_command = direction
+            
 
     if direction_command == 0 and turns_allowed[0]:
         direction = 0
@@ -1212,6 +1228,9 @@ while run:
         pinky_dead = False
     if clyde.in_box and clyde_dead:
         clyde_dead = False
+
+    blue_shots.update()
+    orange_shots.update()
 
     pygame.display.flip()
 pygame.quit()
